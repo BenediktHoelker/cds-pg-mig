@@ -6,7 +6,7 @@ import { program } from 'commander';
 import chalk from 'chalk';
 import clear from 'clear';
 import figlet from 'figlet';
-// import path from 'path';
+import cds from '@sap/cds';
 
 clear();
 
@@ -17,8 +17,14 @@ console.log(
 program
   .version('0.0.1')
   .description('Deploy CDS to Postgres')
-  .option('-c, --create-DB', 'Create new database?')
+  .option('-c, --createDB', 'Create new database?')
   .parse(process.argv);
+
+const options = program.opts();
+
+if (options.createDB) console.log('DB will be created');
+
+console.log(cds.env.requires['db']);
 
 if (!process.argv.slice(2).length) {
   program.outputHelp();

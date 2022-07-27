@@ -13,7 +13,7 @@
   },
   "scripts": {
     "start": "cds run",
-    "deploy": "../build/"
+    "deploy": "bdeploy -c"
   },
   "eslintConfig": {
     "extends": "eslint:recommended",
