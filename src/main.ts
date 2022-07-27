@@ -3,8 +3,7 @@ import childProcess from 'child_process';
 import type { Arguments, CommandBuilder } from 'yargs';
 
 type Options = {
-  name: string;
-  upper: boolean | undefined;
+  createDB: boolean | undefined;
 };
 
 export const command = 'greet <name>';

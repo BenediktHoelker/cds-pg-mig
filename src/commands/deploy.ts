@@ -5,23 +5,19 @@ import { config } from '../config.js';
 
 type Options = {
   service: any;
-  name: string;
-  upper: boolean | undefined;
+  createDB: boolean | undefined;
 };
 
-const command = 'greet <name>';
-const desc = 'Greet <name> with Hello';
-
-const builder: CommandBuilder<Options, Options> = (yargs) =>
-  yargs
-    .options({
-      upper: { type: 'boolean' },
-    })
-    .positional('name', { type: 'string', demandOption: true });
+const builder: CommandBuilder<Options> = (yargs) =>
+  yargs.options({
+    createDB: { type: 'boolean' },
+  });
 
 const handler = async (argv: Arguments<Options>) => {
   for (const service of argv.service) {
     const options = await config(service);
+
+    console.log(options);
   }
 };
 
@@ -34,4 +30,4 @@ function migra() {
   });
 }
 
-export { command, desc, builder, handler, migra };
+export { builder, handler, migra };

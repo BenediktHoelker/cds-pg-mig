@@ -47,7 +47,6 @@ interface service {
 
 interface config {
   service: service;
-  migrations: migrations;
 }
 
 const config = async (service: string): Promise<config> => {
@@ -55,11 +54,9 @@ const config = async (service: string): Promise<config> => {
 
   const serviceOptions = cds.env.requires[service];
 
-  // @ts-ignore
-  const migrationOptions = cds.env.migrations[service];
+  // const migrationOptions = cds.env.migrations[service];
 
   return {
-    migrations: migrationOptions,
     service: serviceOptions,
   };
 };

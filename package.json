@@ -23,7 +23,7 @@
     "typescript": "~4.7"
   },
   "scripts": {
-    "start": "node build/src/main.js",
+    "start": "node build/src/cli.js",
     "clean": "rimraf coverage build tmp",
     "prebuild": "npm run lint",
     "build": "tsc -p tsconfig.json",
@@ -37,7 +37,7 @@
   "author": "Jakub Synowiec <jsynowiec@users.noreply.github.com>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@sap/cds": "^6.0.4",
+    "@sap/cds": "^5.9.8",
     "tslib": "~2.4",
     "yargs": "^17.5.1"
   },
