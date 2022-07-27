@@ -1,32 +1,41 @@
-/**
- * Some predefined delay values (in milliseconds).
- */
-export enum Delays {
-  Short = 500,
-  Medium = 2000,
-  Long = 5000,
-}
+#!/usr/bin/env node
+import childProcess from 'child_process';
+import type { Arguments, CommandBuilder } from 'yargs';
 
-/**
- * Returns a Promise<string> that resolves after a given time.
- *
- * @param {string} name - A name.
- * @param {number=} [delay=Delays.Medium] - A number of milliseconds to delay resolution of the Promise.
- * @returns {Promise<string>}
- */
-function delayedHello(
-  name: string,
-  delay: number = Delays.Medium,
-): Promise<string> {
-  return new Promise((resolve: (value?: string) => void) =>
-    setTimeout(() => resolve(`Hello, ${name}`), delay),
-  );
+type Options = {
+  name: string;
+  upper: boolean | undefined;
+};
+
+export const command = 'greet <name>';
+export const desc = 'Greet <name> with Hello';
+
+export const builder: CommandBuilder<Options, Options> = (yargs) =>
+  yargs
+    .options({
+      upper: { type: 'boolean' },
+    })
+    .positional('name', { type: 'string', demandOption: true });
+
+export const handler = (argv: Arguments<Options>): void => {
+  const { name, upper } = argv;
+  const greeting = `Hello, ${name}!`;
+
+  process.stdout.write(upper ? greeting.toUpperCase() : greeting);
+  process.exit(0);
+};
+
+function migra() {
+  const { spawn } = childProcess;
+  const pyProg = spawn('python', ['./../migra.py']);
+
+  pyProg.stdout.on('data', function (data) {
+    console.log(data.toString());
+  });
 }
 
 // Below are examples of using ESLint errors suppression
 // Here it is suppressing a missing return type definition for the greeter function.
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export async function greeter(name: string) {
-  return await delayedHello(name, Delays.Long);
-}
+export { migra };

@@ -8,7 +8,8 @@
   },
   "devDependencies": {
     "@types/jest": "~27.5",
-    "@types/node": "~16",
+    "@types/node": "^16.11.45",
+    "@types/yargs": "^17.0.10",
     "@typescript-eslint/eslint-plugin": "~5.26",
     "@typescript-eslint/parser": "~5.26",
     "eslint": "~8.16",
@@ -36,7 +37,9 @@
   "author": "Jakub Synowiec <jsynowiec@users.noreply.github.com>",
   "license": "Apache-2.0",
   "dependencies": {
-    "tslib": "~2.4"
+    "@sap/cds": "^6.0.4",
+    "tslib": "~2.4",
+    "yargs": "^17.5.1"
   },
   "volta": {
     "node": "16.13.0"
