@@ -9,8 +9,7 @@
     "express": "^4"
   },
   "devDependencies": {
-    "sqlite3": "^5.0.2",
-    "bdeploy": "file:../../"
+    "sqlite3": "^5.0.2"
   },
   "scripts": {
     "start": "cds run",
