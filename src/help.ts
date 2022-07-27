@@ -13,11 +13,11 @@ import { exec } from 'child_process';
 function migra() {
   exec(
     `migra postgresql://postgres:postgres@localhost/projectplanning1 postgresql://postgres:postgres@localhost/projectplanning6`,
-    (_, stdout, stderr) => {
-      // if (error) {
-      //   console.log(`error: ${error.message}`);
-      //   return;
-      // }
+    (error, stdout, stderr) => {
+      if (error) {
+        console.log(`error: ${error.message}`);
+        return;
+      }
       if (stderr) {
         console.log(`stderr: ${stderr}`);
         return;
