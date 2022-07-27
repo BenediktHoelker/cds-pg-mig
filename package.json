@@ -30,7 +30,8 @@
   "scripts": {
     "start": "nodemon --watch  \"src/**\" --ext  \"ts,json \" --exec \"npx ts-node\" src/index.ts",
     "start:windows": "nodemon --watch 'src/**/*.ts' --exec \"npx ts-node\" src/index.ts",
-    "local": "sudo npm i -g && bdeploy",
+    "local": "npm i -g && bdeploy",
+    "create": "npm run build && npm run local",
     "clean": "rimraf coverage build tmp",
     "prebuild": "npm run lint",
     "build": "tsc -p tsconfig.json",
