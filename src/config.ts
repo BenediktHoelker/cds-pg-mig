@@ -51,6 +51,7 @@ interface config {
 
 const config = async (service: string): Promise<config> => {
   await cds.connect();
+  console.log('hi du');
 
   const serviceOptions = cds.env.requires[service];
 

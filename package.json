@@ -15,14 +15,22 @@
     "eslint-config-prettier": "~8.5",
     "eslint-plugin-jest": "~26.2",
     "jest": "~28.1",
+    "nodemon": "^2.0.19",
     "prettier": "~2.6",
     "rimraf": "~3.0",
     "ts-jest": "~28.0",
+    "ts-node": "^10.9.1",
     "tsutils": "~3.21",
     "typescript": "~4.7"
   },
+  "main": "./build/src/index.js",
+  "bin": {
+    "bdeploy": "./build/src/index.js"
+  },
   "scripts": {
-    "start": "node build/src/cli.js",
+    "start": "nodemon --watch  \"src/**\" --ext  \"ts,json \" --exec \"npx ts-node\" src/index.ts",
+    "start:windows": "nodemon --watch 'src/**/*.ts' --exec \"npx ts-node\" src/index.ts",
+    "local": "sudo npm i -g && bdeploy",
     "clean": "rimraf coverage build tmp",
     "prebuild": "npm run lint",
     "build": "tsc -p tsconfig.json",
@@ -37,6 +45,11 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@sap/cds": "^5.9.8",
+    "chalk": "^4.1.2",
+    "clear": "^0.1.0",
+    "commander": "^9.4.0",
+    "figlet": "^1.5.2",
+    "path": "^0.12.7",
     "tslib": "~2.4",
     "yargs": "^17.5.1"
   },

@@ -18,6 +18,7 @@ const handler = async (argv: Arguments<Options>) => {
     const options = await config(service);
 
     console.log(options);
+    console.log('Hi');
   }
 };
 
