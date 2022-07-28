@@ -3,7 +3,7 @@
 // https://itnext.io/how-to-create-your-own-typescript-cli-with-node-js-1faf7095ef89
 
 import { program } from 'commander';
-import { Client, ClientConfig } from 'pg';
+import { Client } from 'pg';
 import chalk from 'chalk';
 import clear from 'clear';
 import figlet from 'figlet';
@@ -25,7 +25,7 @@ program
 deploy();
 
 const options = program.opts();
-const referenceDB = '_ref_db';
+// const referenceDB = '_ref_db';
 
 if (options.createDB) console.log('DB will be created');
 
@@ -33,32 +33,32 @@ if (!process.argv.slice(2).length) {
   program.outputHelp();
 }
 
-async function connectToPG(database: string) {
-  const clientConfig = getClientConfig();
-  const client = new Client({ ...clientConfig, database });
+async function connectToPG(url) {
+  const client = new Client({
+    connectionString: url,
+    ssl: { rejectUnauthorized: false },
+  });
   await client.connect();
   return client;
 }
 
 async function deploy() {
-  await cds.connect();
+  try {
+    await cds.connect();
 
-  await updateReferenceDB();
-  const diff = await getDatabaseDiff();
-  console.log(diff);
+    await updateReferenceDB();
+    const diff = await getDatabaseDiff();
+    console.log(diff);
 
-  await updateSchema({ diff, schema: 'public' });
+    await updateDB({ diff });
+  } catch (error) {
+    throw Error(error.message);
+  }
 }
 
 async function updateReferenceDB() {
-  // connect to nameless DB as the reference-DB is not created yet
-  let client = await connectToPG('');
-
-  await client.query(`DROP DATABASE IF EXISTS ${referenceDB};`);
-  await client.query(`CREATE DATABASE ${referenceDB};`);
-
-  client.end();
-  client = await connectToPG(referenceDB);
+  const referenceDbURL = cds.env.requires['db'].credentials.referenceDbURL;
+  const client = await connectToPG(referenceDbURL);
 
   const serviceInstance: any = cds.services['db'];
   const cdsModel = await cds.load(cds.env.requires['db'].model);
@@ -67,30 +67,33 @@ async function updateReferenceDB() {
 
   const query = cdsSQL.map((q) => serviceInstance.cdssql2pgsql(q)).join(' ');
 
+  await client.query('DROP SCHEMA public CASCADE');
+  await client.query('CREATE SCHEMA public');
   await client.query(query);
   client.end();
 }
 
-async function updateSchema({ diff, schema }) {
-  const { database } = getClientConfig();
-  const client = await connectToPG(database);
-  await client.query(`SET search_path TO ${schema}; ${diff}`);
-  client.end();
-}
-
-function getDatabaseDiff() {
-  const clientConfig = getClientConfig();
+async function getDatabaseDiff() {
+  // const clientConfig = getClientConfig();
   // how to specify schema: https://stackoverflow.com/questions/39460459/search-path-doesnt-work-as-expected-with-currentschema-in-url
-  const originalDbURL = getDatabaseURL(clientConfig);
-  const referenceDbURL = getDatabaseURL({
-    ...clientConfig,
-    database: referenceDB,
-  });
+
+  // DATABASE_URL is provided by Heroku
+  const originalDbURL = cds.env.requires['db'].credentials.url;
+  // SQLAlchemy (used by migra) supports only database-URLs in the form of 'postgresql://...'
+  // https://stackoverflow.com/questions/62688256/sqlalchemy-exc-nosuchmoduleerror-cant-load-plugin-sqlalchemy-dialectspostgre
+  // process.env.DATABASE_URL.replace('postgres://', 'postgresql://') ||
+  // getDatabaseURL(clientConfig);
+
+  const referenceDbURL = cds.env.requires['db'].credentials.referenceDbURL;
+  // getDatabaseURL({
+  //   ...clientConfig,
+  //   database: referenceDB,
+  // });
 
   return new Promise((resolve, reject) => {
     exec(
       // Format of postgres-URL: postgresql://user:pw@host/database
-      `migra --unsafe ${originalDbURL} ${referenceDbURL}`,
+      `migra --unsafe --schema public ${originalDbURL} ${referenceDbURL}`,
       (_, stdout, stderr) => {
         // error is always defined, even though the request was succesful => dont use it (cf https://github.com/nodejs/node-v0.x-archive/issues/4590)
         // if (error) {
@@ -106,36 +109,43 @@ function getDatabaseDiff() {
   });
 }
 
-function getDatabaseURL({
-  user,
-  password,
-  host,
-  port = '5432',
-  database,
-  schema = 'public',
-}: ClientConfig) {
-  return `postgresql://${user}:${password}@${host}:${port}/${database}?options=-c%20search_path=${schema}`;
+async function updateDB({ diff }) {
+  const originalDbURL = cds.env.requires['db'].credentials.url;
+  const client = await connectToPG(originalDbURL);
+
+  await client.query(diff);
+  client.end();
 }
 
-function getClientConfig() {
-  const {
-    credentials: { user, password, host, port, database, sslrootcert },
-  } = cds.env.requires['db'];
+// function getDatabaseURL({
+//   user,
+//   password,
+//   host,
+//   port = '5432',
+//   database,
+// }: ClientConfig) {
+//   return `postgresql://${user}:${password}@${host}:${port}/${database}`;
+// }
 
-  const clientConfig: ClientConfig = {
-    user,
-    password,
-    host,
-    port,
-    database,
-  };
+// function getClientConfig() {
+//   const {
+//     credentials: { user, password, host, port, database, sslrootcert },
+//   } = cds.env.requires['db'];
 
-  if (sslrootcert) {
-    clientConfig.ssl = {
-      rejectUnauthorized: false,
-      ca: sslrootcert,
-    };
-  }
+//   const clientConfig: ClientConfig = {
+//     user,
+//     password,
+//     host,
+//     port,
+//     database,
+//   };
 
-  return clientConfig;
-}
+//   if (sslrootcert) {
+//     clientConfig.ssl = {
+//       rejectUnauthorized: false,
+//       ca: sslrootcert,
+//     };
+//   }
+
+//   return clientConfig;
+// }

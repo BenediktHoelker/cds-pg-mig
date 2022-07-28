@@ -13,7 +13,7 @@
   },
   "scripts": {
     "start": "cds run",
-    "deploy": "bdeploy -c"
+    "deploy": "npx ts-node ../../src/index.ts"
   },
   "eslintConfig": {
     "extends": "eslint:recommended",

@@ -8,19 +8,15 @@
             "impl": "cds-pg",
             "model": [
                 "srv"
-            ],
-            "credentials": {
-                "[production]": {
-                    "ssl": {
-                        "rejectUnauthorized": false
-                    }
-                }
-            }
+            ]
         }
     },
     "migrations": {
         "db": {
             "multitenant": true,
+            "referenceDB": {
+                "url": "postgresql://epxtnfqvxdzgie:d4f8eebbb402b3b69691ba2a26922dde5aff954fed43c0ca869c143d1f04621c@ec2-34-248-169-69.eu-west-1.compute.amazonaws.com:5432/d4odlhl1jii4k5"
+            },
             "schema": {
                 "default": "public",
                 "clone": "_cdsdbm_clone",
