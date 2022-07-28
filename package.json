@@ -11,6 +11,7 @@
   },
   "scripts": {
     "start": "nodemon --watch  \"src/**\" --ext  \"ts,json \" --exec \"npx ts-node\" src/index.ts",
+    "test:funky": "npm run build && npm i -g && cd test/bookshop && bdeploy -s funky",
     "test": "npm run build && npm i -g && cd test/bookshop && bdeploy",
     "create": "npm run build && npm run local",
     "clean": "rimraf coverage build tmp",
