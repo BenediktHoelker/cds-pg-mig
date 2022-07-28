@@ -1,0 +1,20 @@
+{
+  "VCAP_SERVICES": {
+    "postgres": [
+      {
+        "name": "postgres local",
+        "label": "postgres local",
+        "tags": [
+          "plain",
+          "database",
+          "postgres"
+        ],
+        "credentials": {
+          "ssl": true,
+          "url": "postgresql://postgres:postgres@localhost:5432/original",
+          "referenceDbURL": "postgresql://postgres:postgres@localhost:5432/reference"
+        }
+      }
+    ]
+  }
+}
