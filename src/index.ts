@@ -8,8 +8,11 @@ import chalk from 'chalk';
 import clear from 'clear';
 import figlet from 'figlet';
 import cds from '@sap/cds';
+// import path from 'path';
 import { exec } from 'child_process';
+import fs from 'fs';
 
+import ConnectionParameters = require('pg/lib/connection-parameters');
 clear();
 
 console.log(
@@ -32,10 +35,10 @@ if (!process.argv.slice(2).length) {
   program.outputHelp();
 }
 
-async function connectToPG(url) {
+async function connectToPG({ url, ssl }) {
   const client = new Client({
     connectionString: url,
-    ssl: { rejectUnauthorized: false },
+    ssl,
   });
   await client.connect();
   return client;
@@ -48,10 +51,10 @@ async function deploy() {
     if (options.createDB) {
       // TODO: implement
     }
-
     await updateReferenceDB();
     const diff = await getDatabaseDiff();
     console.log(diff);
+    logToFile(diff);
 
     await updateDB({ diff });
   } catch (error) {
@@ -59,17 +62,34 @@ async function deploy() {
   }
 }
 
+function logToFile(diff) {
+  if (!diff) return;
+
+  const {
+    credentials: { url },
+  } = cds.env.requires['db'];
+  const connectionParams = new ConnectionParameters(url);
+  const dir = 'db_changelogs/' + connectionParams.database;
+
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  fs.writeFileSync(`./${dir}/` + Date.now() + '.sql', diff.toString(), 'utf8');
+}
+
 async function updateReferenceDB() {
   const {
-    credentials: { referenceDbURL },
-    model: cdsModel,
+    credentials: { referenceDbURL, ssl },
+    model,
   } = cds.env.requires['db'];
 
+  const cdsModel = await cds.load(model);
   const cdsSQL = cds.compile.to.sql(cdsModel) as unknown as string[];
   const serviceInstance: any = cds.services['db'];
   const query = cdsSQL.map((q) => serviceInstance.cdssql2pgsql(q)).join(' ');
 
-  const client = await connectToPG(referenceDbURL);
+  const client = await connectToPG({ url: referenceDbURL, ssl });
   await client.query('DROP SCHEMA public CASCADE');
   await client.query('CREATE SCHEMA public');
   await client.query(query);
@@ -101,8 +121,10 @@ async function getDatabaseDiff() {
 }
 
 async function updateDB({ diff }) {
-  const originalDbURL = cds.env.requires['db'].credentials.url;
-  const client = await connectToPG(originalDbURL);
+  const {
+    credentials: { url, ssl },
+  } = cds.env.requires['db'];
+  const client = await connectToPG({ url, ssl });
 
   await client.query(diff);
   client.end();

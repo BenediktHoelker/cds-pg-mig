@@ -30,3 +30,4 @@ build/
 
 *default-env.json
 *heroku.json
+db_changelogs/
