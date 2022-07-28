@@ -20,18 +20,21 @@ program
   .version('0.0.1')
   .description('Deploy CDS to Postgres')
   .option('-c, --createDB', 'Create new database?')
+  .option('-s, --schema <string>', 'Deploy to schema other than "public"')
   .parse(process.argv);
-
-deploy('public');
 
 const options = program.opts();
 const referenceSchema = '_ref';
 
 if (options.createDB) console.log('DB will be created');
 
+const schema: string = options.schema || 'public';
+
 if (!process.argv.slice(2).length) {
   program.outputHelp();
 }
+
+deploy(schema);
 
 async function connectToPG() {
   const clientConfig = getClientConfig();
@@ -71,6 +74,7 @@ async function updateReferenceSchema() {
 
 async function updateSchema({ diff, schema }) {
   const client = await connectToPG();
+  await client.query(`CREATE SCHEMA IF NOT EXISTS ${schema};`);
   await client.query(`SET search_path TO ${schema};`);
   await client.query(diff);
   client.end();
@@ -79,7 +83,7 @@ async function updateSchema({ diff, schema }) {
 function getDatabaseDiff(schema) {
   const clientConfig = getClientConfig();
   // how to specify schema: https://stackoverflow.com/questions/39460459/search-path-doesnt-work-as-expected-with-currentschema-in-url
-  const originalDbURL = getDatabaseURL({ ...clientConfig, schema });
+  const originalSchemaURL = getDatabaseURL({ ...clientConfig, schema });
   const referenceSchemaURL = getDatabaseURL({
     ...clientConfig,
     schema: referenceSchema,
@@ -88,7 +92,7 @@ function getDatabaseDiff(schema) {
   return new Promise((resolve, reject) => {
     exec(
       // Format of postgres-URL: postgresql://user:pw@host/database
-      `migra --unsafe ${originalDbURL} ${referenceSchemaURL}`,
+      `migra --unsafe ${originalSchemaURL} ${referenceSchemaURL}`,
       (_, stdout, stderr) => {
         // error is always defined, even though the request was succesful => dont use it (cf https://github.com/nodejs/node-v0.x-archive/issues/4590)
         // if (error) {
@@ -112,7 +116,12 @@ function getDatabaseURL({
   database,
   schema = 'public',
 }: ClientConfig) {
-  return `postgresql://${user}:${password}@${host}:${port}/${database}?options=-c%20search_path=${schema}`;
+  // Heroku provides a process-env DATABASE_URL
+  const databaseURL =
+    (process.env.DATABASE_URL ||
+      `postgresql://${user}:${password}@${host}:${port}/${database}`) +
+    `?options=-c%20search_path=${schema}`;
+  return databaseURL;
 }
 
 function getClientConfig() {
