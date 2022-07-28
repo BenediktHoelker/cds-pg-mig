@@ -22,10 +22,10 @@ program
   .option('-c, --createDB', 'Create new database?')
   .parse(process.argv);
 
-deploy();
+deploy('public');
 
 const options = program.opts();
-const referenceDB = '_ref_db';
+const referenceSchema = '_ref';
 
 if (options.createDB) console.log('DB will be created');
 
@@ -33,32 +33,30 @@ if (!process.argv.slice(2).length) {
   program.outputHelp();
 }
 
-async function connectToPG(database: string) {
+async function connectToPG() {
   const clientConfig = getClientConfig();
-  const client = new Client({ ...clientConfig, database });
+  const client = new Client(clientConfig);
   await client.connect();
   return client;
 }
 
-async function deploy() {
+async function deploy(schema: string) {
   await cds.connect();
 
-  await updateReferenceDB();
-  const diff = await getDatabaseDiff();
+  await updateReferenceSchema();
+  const diff = await getDatabaseDiff(schema);
   console.log(diff);
 
-  await updateSchema({ diff, schema: 'public' });
+  await updateSchema({ diff, schema });
 }
 
-async function updateReferenceDB() {
+async function updateReferenceSchema() {
   // connect to nameless DB as the reference-DB is not created yet
-  let client = await connectToPG('');
+  const client = await connectToPG();
 
-  await client.query(`DROP DATABASE IF EXISTS ${referenceDB};`);
-  await client.query(`CREATE DATABASE ${referenceDB};`);
-
-  client.end();
-  client = await connectToPG(referenceDB);
+  await client.query(`DROP SCHEMA IF EXISTS ${referenceSchema} CASCADE;`);
+  await client.query(`CREATE SCHEMA ${referenceSchema};`);
+  await client.query(`SET search_path TO ${referenceSchema};`);
 
   const serviceInstance: any = cds.services['db'];
   const cdsModel = await cds.load(cds.env.requires['db'].model);
@@ -72,25 +70,25 @@ async function updateReferenceDB() {
 }
 
 async function updateSchema({ diff, schema }) {
-  const { database } = getClientConfig();
-  const client = await connectToPG(database);
-  await client.query(`SET search_path TO ${schema}; ${diff}`);
+  const client = await connectToPG();
+  await client.query(`SET search_path TO ${schema};`);
+  await client.query(diff);
   client.end();
 }
 
-function getDatabaseDiff() {
+function getDatabaseDiff(schema) {
   const clientConfig = getClientConfig();
   // how to specify schema: https://stackoverflow.com/questions/39460459/search-path-doesnt-work-as-expected-with-currentschema-in-url
-  const originalDbURL = getDatabaseURL(clientConfig);
-  const referenceDbURL = getDatabaseURL({
+  const originalDbURL = getDatabaseURL({ ...clientConfig, schema });
+  const referenceSchemaURL = getDatabaseURL({
     ...clientConfig,
-    database: referenceDB,
+    schema: referenceSchema,
   });
 
   return new Promise((resolve, reject) => {
     exec(
       // Format of postgres-URL: postgresql://user:pw@host/database
-      `migra --unsafe ${originalDbURL} ${referenceDbURL}`,
+      `migra --unsafe ${originalDbURL} ${referenceSchemaURL}`,
       (_, stdout, stderr) => {
         // error is always defined, even though the request was succesful => dont use it (cf https://github.com/nodejs/node-v0.x-archive/issues/4590)
         // if (error) {
