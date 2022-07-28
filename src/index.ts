@@ -25,7 +25,6 @@ program
 deploy();
 
 const options = program.opts();
-// const referenceDB = '_ref_db';
 
 if (options.createDB) console.log('DB will be created');
 
@@ -46,6 +45,10 @@ async function deploy() {
   try {
     await cds.connect();
 
+    if (options.createDB) {
+      // TODO: implement
+    }
+
     await updateReferenceDB();
     const diff = await getDatabaseDiff();
     console.log(diff);
@@ -57,16 +60,16 @@ async function deploy() {
 }
 
 async function updateReferenceDB() {
-  const referenceDbURL = cds.env.requires['db'].credentials.referenceDbURL;
-  const client = await connectToPG(referenceDbURL);
-
-  const serviceInstance: any = cds.services['db'];
-  const cdsModel = await cds.load(cds.env.requires['db'].model);
+  const {
+    credentials: { referenceDbURL },
+    model: cdsModel,
+  } = cds.env.requires['db'];
 
   const cdsSQL = cds.compile.to.sql(cdsModel) as unknown as string[];
-
+  const serviceInstance: any = cds.services['db'];
   const query = cdsSQL.map((q) => serviceInstance.cdssql2pgsql(q)).join(' ');
 
+  const client = await connectToPG(referenceDbURL);
   await client.query('DROP SCHEMA public CASCADE');
   await client.query('CREATE SCHEMA public');
   await client.query(query);
@@ -74,21 +77,9 @@ async function updateReferenceDB() {
 }
 
 async function getDatabaseDiff() {
-  // const clientConfig = getClientConfig();
-  // how to specify schema: https://stackoverflow.com/questions/39460459/search-path-doesnt-work-as-expected-with-currentschema-in-url
-
-  // DATABASE_URL is provided by Heroku
-  const originalDbURL = cds.env.requires['db'].credentials.url;
-  // SQLAlchemy (used by migra) supports only database-URLs in the form of 'postgresql://...'
-  // https://stackoverflow.com/questions/62688256/sqlalchemy-exc-nosuchmoduleerror-cant-load-plugin-sqlalchemy-dialectspostgre
-  // process.env.DATABASE_URL.replace('postgres://', 'postgresql://') ||
-  // getDatabaseURL(clientConfig);
-
-  const referenceDbURL = cds.env.requires['db'].credentials.referenceDbURL;
-  // getDatabaseURL({
-  //   ...clientConfig,
-  //   database: referenceDB,
-  // });
+  const {
+    credentials: { referenceDbURL, url: originalDbURL },
+  } = cds.env.requires['db'];
 
   return new Promise((resolve, reject) => {
     exec(
@@ -116,36 +107,3 @@ async function updateDB({ diff }) {
   await client.query(diff);
   client.end();
 }
-
-// function getDatabaseURL({
-//   user,
-//   password,
-//   host,
-//   port = '5432',
-//   database,
-// }: ClientConfig) {
-//   return `postgresql://${user}:${password}@${host}:${port}/${database}`;
-// }
-
-// function getClientConfig() {
-//   const {
-//     credentials: { user, password, host, port, database, sslrootcert },
-//   } = cds.env.requires['db'];
-
-//   const clientConfig: ClientConfig = {
-//     user,
-//     password,
-//     host,
-//     port,
-//     database,
-//   };
-
-//   if (sslrootcert) {
-//     clientConfig.ssl = {
-//       rejectUnauthorized: false,
-//       ca: sslrootcert,
-//     };
-//   }
-
-//   return clientConfig;
-// }
