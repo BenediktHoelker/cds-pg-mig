@@ -29,4 +29,4 @@ build/
 .DS_Store
 
 default-env.json
-default-envs/*
+default-envs/
