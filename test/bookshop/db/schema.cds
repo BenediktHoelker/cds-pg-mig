@@ -20,6 +20,7 @@ entity Books : managed {
 entity Authors : managed {
   key ID      : Integer;
       name    : String(111);
+      age     : Integer;
       manager : Association to Authors;
       books   : Association to many Books
                   on books.author = $self;

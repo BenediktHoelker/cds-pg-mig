@@ -11,12 +11,12 @@
   },
   "scripts": {
     "start": "nodemon --watch  \"src/**\" --ext  \"ts,json \" --exec \"npx ts-node\" src/index.ts",
-    "buildAndTest": "npm run build && npm i -g && cd test/bookshop && bdeploy",
     "test": "cd test/bookshop && bash ./set-env.sh local && npx ts-node ../../src/index.ts",
     "test:heroku": "cd test/bookshop && bash ./set-env.sh heroku && npx ts-node ../../src/index.ts",
     "create": "npm run build && npm run local",
     "clean": "rimraf coverage build tmp",
     "docker:compose": "docker-compose -f docker-compose.yaml up -d",
+    "release:local": "npm run build && npm i -g",
     "prebuild": "npm run lint",
     "build": "tsc -p tsconfig.json",
     "build:watch": "tsc -w -p tsconfig.json",
