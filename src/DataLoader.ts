@@ -34,7 +34,8 @@ export class DataLoader {
     if (folders.size === 0) return;
     for (const folder of folders) {
       const files = await readdir(folder);
-      for (const each of files.filter(this._filterCsvFiles.bind(this))) {
+      const filtered = files.filter(this._filterCsvFiles.bind(this));
+      for (const each of filtered) {
         // Verify entity
         const name = each
           .replace(/-/g, '.')
@@ -46,8 +47,19 @@ export class DataLoader {
         const src = await read(file, 'utf8');
         const [cols, ...rows] = cds.parse.csv(src);
 
+        if (rows.length === 0) continue;
+
         const valuesToInsert = rows
-          .map((row) => `(${row.map((element) => `'${element}'`).join(',')})`)
+          .map(
+            (row) =>
+              `(${row
+                .map((element) => {
+                  // filter out empty values ("undefined") as it will lead to parsing errors e.g. for Integer-colums
+                  if (element === undefined) return 'null';
+                  return `'${element}'`;
+                })
+                .join(',')})`,
+          )
           .join(',');
         const columns = cols.join(',');
 
@@ -56,6 +68,8 @@ export class DataLoader {
           VALUES ${valuesToInsert}
           ON CONFLICT DO NOTHING;
         `);
+
+        console.log('[cds-pg-mig] Load ' + entity.name);
       }
     }
   }

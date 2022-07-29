@@ -17,9 +17,9 @@ import ConnectionParameters = require('pg/lib/connection-parameters');
 
 clear();
 
-console.log(
-  chalk.red(figlet.textSync('cds-pg-mig', { horizontalLayout: 'full' })),
-);
+// console.log(
+//   chalk.red(figlet.textSync('cds-pg-mig', { horizontalLayout: 'full' })),
+// );
 
 program
   .version('0.0.1')
@@ -37,9 +37,9 @@ const options = program.opts();
 
 if (options.createDB) console.log('DB will be created');
 
-if (!process.argv.slice(2).length) {
-  program.outputHelp();
-}
+// if (!process.argv.slice(2).length) {
+//   program.outputHelp();
+// }
 
 async function connectToPG({ url, ssl }) {
   const client = new Client({
@@ -70,7 +70,7 @@ async function deploy() {
 
   logToFile(diff);
 
-  await updateDB({ diff });
+  await migrateTargetDB({ diff });
 
   await loadData(model);
 }
@@ -101,12 +101,15 @@ function logToFile(diff) {
 
   const connectionParams = new ConnectionParameters(url);
   const dir = 'db_changelogs/' + connectionParams.database;
+  const fileName = `${dir}/` + Date.now() + '.sql';
 
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
 
-  fs.writeFileSync(`./${dir}/` + Date.now() + '.sql', diff.toString(), 'utf8');
+  fs.writeFileSync(`./` + fileName, diff.toString(), 'utf8');
+
+  console.log('[cds-pg-mig] Changelog written to ' + fileName);
 }
 
 async function updateReferenceDB(model) {
@@ -125,6 +128,8 @@ async function updateReferenceDB(model) {
   await client.query('CREATE SCHEMA public');
   await client.query(query);
   client.end();
+
+  console.log('[cds-pg-mig] Update reference-DB: successful');
 }
 
 async function getDatabaseDiff() {
@@ -154,7 +159,7 @@ async function getDatabaseDiff() {
   });
 }
 
-async function updateDB({ diff }) {
+async function migrateTargetDB({ diff }) {
   const {
     credentials: {
       target: { url, ssl },
@@ -165,4 +170,6 @@ async function updateDB({ diff }) {
 
   await client.query(diff);
   client.end();
+
+  console.log('[cds-pg-mig] Migrate target-DB: successful');
 }
