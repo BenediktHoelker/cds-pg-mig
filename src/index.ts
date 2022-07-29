@@ -2,6 +2,7 @@
 
 // https://itnext.io/how-to-create-your-own-typescript-cli-with-node-js-1faf7095ef89
 
+import { DataLoader } from './DataLoader';
 import { program } from 'commander';
 import { Client } from 'pg';
 import chalk from 'chalk';
@@ -13,6 +14,7 @@ import { exec } from 'child_process';
 import fs from 'fs';
 
 import ConnectionParameters = require('pg/lib/connection-parameters');
+
 clear();
 
 console.log(
@@ -23,6 +25,10 @@ program
   .version('0.0.1')
   .description('Deploy CDS to Postgres')
   .option('-c, --createDB', 'Create new database?')
+  .option(
+    '-d, --deltaUpdate',
+    'Load delta of initial data (y) or overwrite all data (n)?',
+  )
   .parse(process.argv);
 
 deploy();
@@ -44,22 +50,46 @@ async function connectToPG({ url, ssl }) {
   return client;
 }
 
+async function getCdsModel() {
+  const { model } = cds.env.requires['db'];
+
+  const cdsModel = await cds.load(model);
+  return cdsModel;
+}
+
 async function deploy() {
-  try {
-    await cds.connect();
+  // const {
+  //   credentials: { url },
+  // } = cds.env.requires['db'];
+  // const connectionParams = new ConnectionParameters(url);
 
-    if (options.createDB) {
-      // TODO: implement
-    }
-    await updateReferenceDB();
-    const diff = await getDatabaseDiff();
-    console.log(diff);
-    logToFile(diff);
+  await cds.connect();
+  const model = await getCdsModel();
 
-    await updateDB({ diff });
-  } catch (error) {
-    throw Error(error.message);
+  if (options.createDB) {
+    // TODO: implement
   }
+
+  await updateReferenceDB(model);
+  const diff = await getDatabaseDiff();
+
+  logToFile(diff);
+
+  await updateDB({ diff });
+
+  await loadData(model);
+}
+
+async function loadData(model) {
+  const loader = new DataLoader(model, options.deltaUpdate);
+
+  const {
+    credentials: { url, ssl },
+  } = cds.env.requires['db'];
+  const client = await connectToPG({ url, ssl });
+
+  await loader.load(client);
+  client.end();
 }
 
 function logToFile(diff) {
@@ -78,14 +108,12 @@ function logToFile(diff) {
   fs.writeFileSync(`./${dir}/` + Date.now() + '.sql', diff.toString(), 'utf8');
 }
 
-async function updateReferenceDB() {
+async function updateReferenceDB(model) {
   const {
     credentials: { referenceDbURL, ssl },
-    model,
   } = cds.env.requires['db'];
 
-  const cdsModel = await cds.load(model);
-  const cdsSQL = cds.compile.to.sql(cdsModel) as unknown as string[];
+  const cdsSQL = cds.compile.to.sql(model) as unknown as string[];
   const serviceInstance: any = cds.services['db'];
   const query = cdsSQL.map((q) => serviceInstance.cdssql2pgsql(q)).join(' ');
 

@@ -16,6 +16,7 @@
     "test:heroku": "cd test/bookshop && bash ./set-env.sh heroku && npx ts-node ../../src/index.ts",
     "create": "npm run build && npm run local",
     "clean": "rimraf coverage build tmp",
+    "docker:compose": "docker-compose -f docker-compose.yaml up -d",
     "prebuild": "npm run lint",
     "build": "tsc -p tsconfig.json",
     "build:watch": "tsc -w -p tsconfig.json",
