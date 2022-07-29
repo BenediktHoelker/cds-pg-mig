@@ -58,11 +58,6 @@ async function getCdsModel() {
 }
 
 async function deploy() {
-  // const {
-  //   credentials: { url },
-  // } = cds.env.requires['db'];
-  // const connectionParams = new ConnectionParameters(url);
-
   await cds.connect();
   const model = await getCdsModel();
 
@@ -81,11 +76,14 @@ async function deploy() {
 }
 
 async function loadData(model) {
+  const {
+    credentials: {
+      target: { url, ssl },
+    },
+  } = cds.env.requires['db'];
+
   const loader = new DataLoader(model, options.deltaUpdate);
 
-  const {
-    credentials: { url, ssl },
-  } = cds.env.requires['db'];
   const client = await connectToPG({ url, ssl });
 
   await loader.load(client);
@@ -96,8 +94,11 @@ function logToFile(diff) {
   if (!diff) return;
 
   const {
-    credentials: { url },
+    credentials: {
+      target: { url },
+    },
   } = cds.env.requires['db'];
+
   const connectionParams = new ConnectionParameters(url);
   const dir = 'db_changelogs/' + connectionParams.database;
 
@@ -110,14 +111,16 @@ function logToFile(diff) {
 
 async function updateReferenceDB(model) {
   const {
-    credentials: { referenceDbURL, ssl },
+    credentials: {
+      reference: { url, ssl },
+    },
   } = cds.env.requires['db'];
 
   const cdsSQL = cds.compile.to.sql(model) as unknown as string[];
   const serviceInstance: any = cds.services['db'];
   const query = cdsSQL.map((q) => serviceInstance.cdssql2pgsql(q)).join(' ');
 
-  const client = await connectToPG({ url: referenceDbURL, ssl });
+  const client = await connectToPG({ url, ssl });
   await client.query('DROP SCHEMA public CASCADE');
   await client.query('CREATE SCHEMA public');
   await client.query(query);
@@ -126,13 +129,16 @@ async function updateReferenceDB(model) {
 
 async function getDatabaseDiff() {
   const {
-    credentials: { referenceDbURL, url: originalDbURL },
+    credentials: {
+      reference: { url: referenceURL },
+      target: { url: targetURL },
+    },
   } = cds.env.requires['db'];
 
   return new Promise((resolve, reject) => {
     exec(
       // Format of postgres-URL: postgresql://user:pw@host/database
-      `migra --unsafe --schema public ${originalDbURL} ${referenceDbURL}`,
+      `migra --unsafe --schema public ${targetURL} ${referenceURL}`,
       (_, stdout, stderr) => {
         // error is always defined, even though the request was succesful => dont use it (cf https://github.com/nodejs/node-v0.x-archive/issues/4590)
         // if (error) {
@@ -150,8 +156,11 @@ async function getDatabaseDiff() {
 
 async function updateDB({ diff }) {
   const {
-    credentials: { url, ssl },
+    credentials: {
+      target: { url, ssl },
+    },
   } = cds.env.requires['db'];
+
   const client = await connectToPG({ url, ssl });
 
   await client.query(diff);

@@ -10,8 +10,12 @@
           "postgres"
         ],
         "credentials": {
-          "url": "postgresql://postgres:postgres@localhost:5432/original",
-          "referenceDbURL": "postgresql://postgres:postgres@localhost:5432/reference"
+          "target": {
+            "url": "postgresql://postgres:postgres@localhost:5432/original"
+          },
+          "reference": {
+            "url": "postgresql://postgres:postgres@localhost:5432/reference"
+          }
         }
       }
     ]
