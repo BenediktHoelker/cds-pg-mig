@@ -69,7 +69,7 @@ export class DataLoader {
           ON CONFLICT DO NOTHING;
         `);
 
-        console.log('[cds-pg-mig] Load ' + entity.name);
+        console.log('[cds-pg-migra] Load ' + entity.name);
       }
     }
   }

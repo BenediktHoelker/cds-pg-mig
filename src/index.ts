@@ -18,7 +18,7 @@ import ConnectionParameters = require('pg/lib/connection-parameters');
 clear();
 
 // console.log(
-//   chalk.red(figlet.textSync('cds-pg-mig', { horizontalLayout: 'full' })),
+//   chalk.red(figlet.textSync('cds-pg-migra', { horizontalLayout: 'full' })),
 // );
 
 program
@@ -109,7 +109,7 @@ function logToFile(diff) {
 
   fs.writeFileSync(`./` + fileName, diff.toString(), 'utf8');
 
-  console.log('[cds-pg-mig] Changelog written to ' + fileName);
+  console.log('[cds-pg-migra] Changelog written to ' + fileName);
 }
 
 async function updateReferenceDB(model) {
@@ -129,7 +129,7 @@ async function updateReferenceDB(model) {
   await client.query(query);
   client.end();
 
-  console.log('[cds-pg-mig] Update reference-DB: successful');
+  console.log('[cds-pg-migra] Update reference-DB: successful');
 }
 
 async function getDatabaseDiff() {
@@ -171,5 +171,5 @@ async function migrateTargetDB({ diff }) {
   await client.query(diff);
   client.end();
 
-  console.log('[cds-pg-mig] Migrate target-DB: successful');
+  console.log('[cds-pg-migra] Migrate target-DB: successful');
 }
