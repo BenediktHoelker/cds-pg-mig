@@ -6,6 +6,14 @@
 [![APLv2][license-badge]][license]
 [![Build Status - GitHub Actions][gha-badge]][gha-ci]
 
+## Summary
+
+This library provides a tool for migrating your postgres-DB within SAPCAP projects. It uses (migra)[https://databaseci.com/docs/migra] for creating an SQL-diff between a reference-DB and the target-DB.
+
+The semantic versioning of this package is following this (guideline)[https://dev.to/kouts/automated-versioning-and-package-publishing-using-github-actions-and-semantic-release-1kce].
+
+## Template
+
 👩🏻‍💻 Developer Ready: A comprehensive template. Works out of the box for most [Node.js][nodejs] projects.
 
 🏃🏽 Instant Value: All basic tools included and configured:

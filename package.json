@@ -1,13 +1,15 @@
 {
-  "name": "node-typescript-boilerplate",
-  "version": "0.0.0",
-  "description": "Minimalistic boilerplate to quick-start Node.js development in TypeScript.",
+  "name": "cds-pg-migra",
+  "version": "0.0.0-semantic-release",
+  "description": "Migrate Postgres-databases for SAPCAP CDS-projects.",
+  "author": "Benedikt Hölker <benedikt.hoelker@proton.me>",
+  "license": "Apache-2.0",
   "engines": {
     "node": ">= 16.13 <17"
   },
   "main": "./build/src/index.js",
   "bin": {
-    "bdeploy": "./build/src/index.js"
+    "cds-pg-migra": "./build/src/index.js"
   },
   "scripts": {
     "start": "nodemon --watch  \"src/**\" --ext  \"ts,json \" --exec \"npx ts-node\" src/index.ts",
@@ -24,10 +26,9 @@
     "lint": "eslint . --ext .ts --ext .mts",
     "test:auto": "jest --coverage",
     "prettier": "prettier --config .prettierrc --write .",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "prepare": "husky install"
   },
-  "author": "Jakub Synowiec <jsynowiec@users.noreply.github.com>",
-  "license": "Apache-2.0",
   "dependencies": {
     "@sap/cds": "^5.9.8",
     "chalk": "^4.1.2",
@@ -41,6 +42,8 @@
     "yargs": "^17.5.1"
   },
   "devDependencies": {
+    "@commitlint/cli": "^17.0.3",
+    "@commitlint/config-conventional": "^17.0.3",
     "@types/jest": "~27.5",
     "@types/node": "^16.11.45",
     "@types/yargs": "^17.0.10",
@@ -50,6 +53,7 @@
     "eslint": "~8.16",
     "eslint-config-prettier": "~8.5",
     "eslint-plugin-jest": "~26.2",
+    "husky": "^8.0.1",
     "jest": "~28.1",
     "nodemon": "^2.0.19",
     "prettier": "~2.6",
