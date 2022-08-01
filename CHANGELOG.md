@@ -1,3 +1,13 @@
+## [1.0.2](https://github.com/BenediktHoelker/cds-pg-migra/compare/v1.0.1...v1.0.2) (2022-08-01)
+
+
+### Bug Fixes
+
+* release config ready for ESM ([bfd189e](https://github.com/BenediktHoelker/cds-pg-migra/commit/bfd189e9b473f40e14835a07af118552d09cc422))
+* release config ready for ESM (2) ([3e720f9](https://github.com/BenediktHoelker/cds-pg-migra/commit/3e720f911d94e5f0bab56cb7a6810d00931d17c9))
+* use expressive logging, change to type:module for the logger to work ([a3a7ef8](https://github.com/BenediktHoelker/cds-pg-migra/commit/a3a7ef8cfba53df185d10cb6257ecb04aeecf731))
+* use expressive logging, change to type:module for the logger to work (2) ([4439edb](https://github.com/BenediktHoelker/cds-pg-migra/commit/4439edb6f7c0eb07c7c1c87d7797e1a926089dea))
+
 ## [1.0.1](https://github.com/BenediktHoelker/cds-pg-migra/compare/v1.0.0...v1.0.1) (2022-07-30)
 
 
