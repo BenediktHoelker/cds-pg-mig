@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/BenediktHoelker/cds-pg-migra/compare/v1.0.0...v1.0.1) (2022-07-30)
+
+
+### Bug Fixes
+
+* run build:release before build ([5cfb8fb](https://github.com/BenediktHoelker/cds-pg-migra/commit/5cfb8fb6b33f43fcb0e5c5b2e84f2ef6f362aa9e))
+
 # 1.0.0 (2022-07-30)
 
 
