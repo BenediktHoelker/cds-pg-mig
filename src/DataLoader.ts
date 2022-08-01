@@ -70,12 +70,17 @@ export class DataLoader {
             return values;
           })
           .join(',');
+
+        const entityKeys = Object.values(entity.keys)
+          .map(({ name }) => name)
+          .join(',');
         const columns = cols.join(',');
+        const columnsPrefixed = cols.map((col) => `EXCLUDED.${col}`).join(',');
 
         await pgClient.query(`
           INSERT INTO ${entity.name.replaceAll('.', '_')} (${columns})
           VALUES ${valuesToInsert}
-          ON CONFLICT DO NOTHING;
+          ON CONFLICT (${entityKeys}) DO UPDATE SET (${columns}) = (${columnsPrefixed});
         `);
 
         console.log('[cds-pg-migra] Load ' + entity.name);

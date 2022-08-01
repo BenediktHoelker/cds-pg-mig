@@ -29,5 +29,6 @@ build/
 .DS_Store
 
 *default-env.json
+default-envs
 *heroku.json
 db_changelogs/
