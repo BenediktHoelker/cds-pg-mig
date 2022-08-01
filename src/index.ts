@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
 // https://itnext.io/how-to-create-your-own-typescript-cli-with-node-js-1faf7095ef89
+import logProcessErrors from 'log-process-errors';
+logProcessErrors();
 
-import { DataLoader } from './DataLoader';
+import { DataLoader } from './DataLoader.js';
 import { program } from 'commander';
-import { Client } from 'pg';
+import pg from 'pg';
 import chalk from 'chalk';
 import clear from 'clear';
 import figlet from 'figlet';
@@ -13,13 +15,13 @@ import cds from '@sap/cds';
 import { exec } from 'child_process';
 import fs from 'fs';
 
-import ConnectionParameters = require('pg/lib/connection-parameters');
-
-clear();
+import ConnectionParameters from 'pg/lib/connection-parameters.js';
 
 // console.log(
 //   chalk.red(figlet.textSync('cds-pg-migra', { horizontalLayout: 'full' })),
 // );
+
+const Client = pg.Client;
 
 program
   .version('0.0.1')
@@ -58,6 +60,13 @@ async function getCdsModel() {
 }
 
 async function deploy() {
+  // log.default({
+  //   log(error, level, originalError) {
+  //     winstonLogger[level](error.stack);
+  //   },
+  // });
+
+  // try {
   await cds.connect();
   const model = await getCdsModel();
 
@@ -73,6 +82,9 @@ async function deploy() {
   await migrateTargetDB({ diff });
 
   await loadData(model);
+  // } catch (error) {
+  //   console.log(error.message);
+  // }
 }
 
 async function loadData(model) {

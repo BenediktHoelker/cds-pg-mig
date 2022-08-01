@@ -1,7 +1,11 @@
-import * as cdsg from '@sap/cds';
-const cds = cdsg as any;
-const { fs, path, isdir, read } = cds.utils;
+import cds from '@sap/cds';
+import fs from 'fs';
+import path from 'path';
+
+import { isdir, read } from './utils.js';
 const { readdir } = fs.promises;
+
+const help: any = cds;
 
 /**
  * Data loader class handling imports of csv files (json maybe added).
@@ -21,10 +25,10 @@ export class DataLoader {
   async load(pgClient) {
     const locations = ['data', 'csv'];
     if (!this.model.$sources) return;
-    const folders = new Set();
+    const folders = new Set<string>();
     for (const model of this.model.$sources) {
       for (const data of locations) {
-        for (const each of [model + data, model + '/../' + data]) {
+        for (const each of [model + '/../' + data]) {
           const folder = path.resolve(each);
           if (isdir(folder)) folders.add(folder);
         }
@@ -45,21 +49,26 @@ export class DataLoader {
         // Load the content
         const file = path.join(folder, each);
         const src = await read(file, 'utf8');
-        const [cols, ...rows] = cds.parse.csv(src);
+        const [cols, ...rows] = help.parse.csv(src);
+        const columnCount = cols.length;
 
         if (rows.length === 0) continue;
 
         const valuesToInsert = rows
-          .map(
-            (row) =>
-              `(${row
-                .map((element) => {
-                  // filter out empty values ("undefined") as it will lead to parsing errors e.g. for Integer-colums
-                  if (element === undefined) return 'null';
-                  return `'${element}'`;
-                })
-                .join(',')})`,
-          )
+          .map((row) => {
+            // In case the mockdata is missing columns, fill it with empty values (by repeating ",")
+
+            while (row.length < columnCount) row.push(',');
+
+            const values = `(${row
+              .map((element) => {
+                // filter out empty values ("undefined") as it will lead to parsing errors e.g. for Integer-colums
+                if (element === undefined) return 'null';
+                return `'${element}'`;
+              })
+              .join(',')})`;
+            return values;
+          })
           .join(',');
         const columns = cols.join(',');
 
