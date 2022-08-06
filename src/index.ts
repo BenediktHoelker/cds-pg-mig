@@ -7,10 +7,9 @@ logProcessErrors();
 import { DataLoader } from './DataLoader.js';
 import { program } from 'commander';
 import pg from 'pg';
-import chalk from 'chalk';
-import clear from 'clear';
-import figlet from 'figlet';
 import cds from '@sap/cds';
+import { globby } from 'globby';
+
 // import path from 'path';
 import { exec } from 'child_process';
 import fs from 'fs';
@@ -133,12 +132,20 @@ async function updateReferenceDB(model) {
 
   const cdsSQL = cds.compile.to.sql(model) as unknown as string[];
   const serviceInstance: any = cds.services['db'];
-  const query = cdsSQL.map((q) => serviceInstance.cdssql2pgsql(q)).join(' ');
+  const sqlFiles = await globby('db/sql/*.sql');
+
+  const cdsQueries = cdsSQL.map((q) => serviceInstance.cdssql2pgsql(q));
+  const explicitSQLQueries = sqlFiles.map((fileName) => {
+    return fs.readFileSync(fileName).toString();
+  });
+
+  const query = [...cdsQueries, ...explicitSQLQueries].join(' ');
 
   const client = await connectToPG({ url, ssl });
   await client.query('DROP SCHEMA public CASCADE');
   await client.query('CREATE SCHEMA public');
   await client.query(query);
+  // await client.query(explicitSQLQueries);
   client.end();
 
   console.log('[cds-pg-migra] Update reference-DB: successful');
