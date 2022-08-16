@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/BenediktHoelker/cds-pg-migra/compare/v1.0.2...v1.0.3) (2022-08-01)
+
+
+### Bug Fixes
+
+* update on conflict for mockdata ([91bf41c](https://github.com/BenediktHoelker/cds-pg-migra/commit/91bf41c6fab764ab511c2e28f8b59e6d056546fa))
+
 ## [1.0.2](https://github.com/BenediktHoelker/cds-pg-migra/compare/v1.0.1...v1.0.2) (2022-08-01)
 
 
