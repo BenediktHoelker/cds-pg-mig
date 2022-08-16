@@ -14,11 +14,11 @@ const help: any = cds;
  * @see @sap/cds/lib/srv/db/deploy.js
  */
 export class DataLoader {
-  private deltaUpdate: boolean;
+  private overwriteData: boolean;
   private model: any;
 
-  constructor(model, deltaUpdate: boolean) {
-    this.deltaUpdate = deltaUpdate;
+  constructor(model, overwriteData: boolean) {
+    this.overwriteData = overwriteData;
     this.model = model;
   }
 
@@ -76,8 +76,10 @@ export class DataLoader {
           .join(',');
         const columns = cols.join(',');
         const columnsPrefixed = cols.map((col) => `EXCLUDED.${col}`).join(',');
+        const table = entity.name.replaceAll('.', '_');
 
         await pgClient.query(`
+          ${this.overwriteData ? `TRUNCATE TABLE ${table};` : ''}
           INSERT INTO ${entity.name.replaceAll('.', '_')} (${columns})
           VALUES ${valuesToInsert}
           ON CONFLICT (${entityKeys}) DO UPDATE SET (${columns}) = (${columnsPrefixed});

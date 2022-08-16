@@ -27,8 +27,8 @@ program
   .description('Deploy CDS to Postgres')
   .option('-c, --createDB', 'Create new database?')
   .option(
-    '-d, --deltaUpdate',
-    'Load delta of initial data (y) or overwrite all data (n)?',
+    '-o, --overwriteData',
+    'Overwrite data (y) or merge with existing data  (n)?',
   )
   .parse(process.argv);
 
@@ -37,10 +37,6 @@ deploy();
 const options = program.opts();
 
 if (options.createDB) console.log('DB will be created');
-
-// if (!process.argv.slice(2).length) {
-//   program.outputHelp();
-// }
 
 async function connectToPG({ url, ssl }) {
   const client = new Client({
@@ -93,7 +89,7 @@ async function loadData(model) {
     },
   } = cds.env.requires['db'];
 
-  const loader = new DataLoader(model, options.deltaUpdate);
+  const loader = new DataLoader(model, options.overwriteData);
 
   const client = await connectToPG({ url, ssl });
 
@@ -144,7 +140,12 @@ async function updateReferenceDB(model) {
   const client = await connectToPG({ url, ssl });
   await client.query('DROP SCHEMA public CASCADE');
   await client.query('CREATE SCHEMA public');
-  await client.query(query);
+
+  // TODO: use a similar function to strftime in postgres (=> we need to add the 1 milisecond of the next line)
+  const replaced = query
+    .replaceAll("strftime('%Y-%m-%dT%H:%M:%S.001Z', 'now')", 'now()')
+    .replaceAll("strftime('%Y-%m-%dT%H:%M:%S.000Z', 'now')", 'now()');
+  await client.query(replaced);
   // await client.query(explicitSQLQueries);
   client.end();
 
