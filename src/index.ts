@@ -7,10 +7,9 @@ logProcessErrors();
 import { DataLoader } from './DataLoader.js';
 import { program } from 'commander';
 import pg from 'pg';
-import chalk from 'chalk';
-import clear from 'clear';
-import figlet from 'figlet';
 import cds from '@sap/cds';
+import { globby } from 'globby';
+
 // import path from 'path';
 import { exec } from 'child_process';
 import fs from 'fs';
@@ -28,8 +27,8 @@ program
   .description('Deploy CDS to Postgres')
   .option('-c, --createDB', 'Create new database?')
   .option(
-    '-d, --deltaUpdate',
-    'Load delta of initial data (y) or overwrite all data (n)?',
+    '-o, --overwriteData',
+    'Overwrite data (y) or merge with existing data  (n)?',
   )
   .parse(process.argv);
 
@@ -38,10 +37,6 @@ deploy();
 const options = program.opts();
 
 if (options.createDB) console.log('DB will be created');
-
-// if (!process.argv.slice(2).length) {
-//   program.outputHelp();
-// }
 
 async function connectToPG({ url, ssl }) {
   const client = new Client({
@@ -94,7 +89,7 @@ async function loadData(model) {
     },
   } = cds.env.requires['db'];
 
-  const loader = new DataLoader(model, options.deltaUpdate);
+  const loader = new DataLoader(model, options.overwriteData);
 
   const client = await connectToPG({ url, ssl });
 
@@ -133,12 +128,25 @@ async function updateReferenceDB(model) {
 
   const cdsSQL = cds.compile.to.sql(model) as unknown as string[];
   const serviceInstance: any = cds.services['db'];
-  const query = cdsSQL.map((q) => serviceInstance.cdssql2pgsql(q)).join(' ');
+  const sqlFiles = await globby('db/sql/*.sql');
+
+  const cdsQueries = cdsSQL.map((q) => serviceInstance.cdssql2pgsql(q));
+  const explicitSQLQueries = sqlFiles.map((fileName) => {
+    return fs.readFileSync(fileName).toString();
+  });
+
+  const query = [...cdsQueries, ...explicitSQLQueries].join(' ');
 
   const client = await connectToPG({ url, ssl });
   await client.query('DROP SCHEMA public CASCADE');
   await client.query('CREATE SCHEMA public');
-  await client.query(query);
+
+  // TODO: use a similar function to strftime in postgres (=> we need to add the 1 milisecond of the next line)
+  const replaced = query
+    .replaceAll("strftime('%Y-%m-%dT%H:%M:%S.001Z', 'now')", 'now()')
+    .replaceAll("strftime('%Y-%m-%dT%H:%M:%S.000Z', 'now')", 'now()');
+  await client.query(replaced);
+  // await client.query(explicitSQLQueries);
   client.end();
 
   console.log('[cds-pg-migra] Update reference-DB: successful');

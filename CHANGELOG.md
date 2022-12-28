@@ -1,3 +1,17 @@
+## [1.1.1](https://github.com/BenediktHoelker/cds-pg-migra/compare/v1.1.0...v1.1.1) (2022-08-16)
+
+
+### Bug Fixes
+
+* make log-process-errors a dependency ([92ab8b2](https://github.com/BenediktHoelker/cds-pg-migra/commit/92ab8b2011677925826a3557619464371c847ffd))
+
+# [1.1.0](https://github.com/BenediktHoelker/cds-pg-migra/compare/v1.0.3...v1.1.0) (2022-08-16)
+
+
+### Features
+
+* include plain SQL-files in deployment ([f8955d8](https://github.com/BenediktHoelker/cds-pg-migra/commit/f8955d83936a5d89e6c7d208162eec4881ca2ef2))
+
 ## [1.0.3](https://github.com/BenediktHoelker/cds-pg-migra/compare/v1.0.2...v1.0.3) (2022-08-01)
 
 
