@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/iot-gmbh/cds-pg-migra/compare/v1.1.1...v1.1.2) (2023-03-02)
+
+
+### Bug Fixes
+
+* when inserting data: on conflict, do nothing ([5ebeb02](https://github.com/iot-gmbh/cds-pg-migra/commit/5ebeb02565900965ca5ca43c316845abff4c2a04))
+
 ## [1.1.1](https://github.com/BenediktHoelker/cds-pg-migra/compare/v1.1.0...v1.1.1) (2022-08-16)
 
 
