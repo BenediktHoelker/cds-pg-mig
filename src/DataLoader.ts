@@ -82,8 +82,9 @@ export class DataLoader {
           ${this.overwriteData ? `TRUNCATE TABLE ${table};` : ''}
           INSERT INTO ${entity.name.replaceAll('.', '_')} (${columns})
           VALUES ${valuesToInsert}
-          ON CONFLICT (${entityKeys}) DO UPDATE SET (${columns}) = (${columnsPrefixed});
+          ON CONFLICT DO NOTHING;
         `);
+        // ON CONFLICT (${entityKeys}) DO UPDATE SET (${columns}) = (${columnsPrefixed});
 
         console.log('[cds-pg-migra] Load ' + entity.name);
       }
